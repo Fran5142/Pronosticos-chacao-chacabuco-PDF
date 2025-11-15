@@ -83,7 +83,7 @@
   background: #fff;
   color: #000;
   margin: 30px auto;
-  padding: 20mm 40mm 40mm 40mm;
+  padding: 20mm 20mm 30mm 20mm;
   font-family: Arial, sans-serif;
   font-size: 12pt;
   line-height: 1.35;
@@ -210,6 +210,7 @@ span.negrita[data-met="true"] {
   background: #fff3d6;
   box-shadow: 0 6px 12px rgba(0,0,0,0.12); 
 }
+
 </style>
 </head>
 
@@ -284,7 +285,6 @@ function formatearTexto(texto, listaMayus){
   texto = corregirDireccionesViento(texto);
   texto = reemplazarAbreviaturas(texto);
 
-  // Palabras en mayúsculas y manejo especial de MET###
   listaMayus.forEach(palabra => {
     const palabraTrim = palabra.trim();
     const regex = new RegExp("\\b" + palabraTrim + "\\b", "gi");
@@ -302,8 +302,10 @@ function formatearTexto(texto, listaMayus){
 texto = texto.replace(/\(mal\s+tiempo\)/gi, '<span class="negrita">(MAL TIEMPO)</span>');
 texto = texto.replace(/\(temporal\)/gi, '<span class="negrita">(TEMPORAL)</span>');
 
-// 🔹 Poner EMITIDO: o EMITIDO en negrita automáticamente
-texto = texto.replace(/\bEmitido:?/gi, '<span class="negrita">Emitido:</span>');
+// 🔹 Poner EMITIDO: en negrita automáticamente
+texto = texto.replace(/\bEMITIDO:\s*(.*)/gi, (_, resto) => {
+  return `<span class="negrita">EMITIDO:</span> ${resto.toUpperCase()}`;
+});
 
 return texto;
 
@@ -334,12 +336,23 @@ function generarVista(){
   const listaMayus=document.getElementById("palabrasMayus").value.split(",");
   if(!texto){alert("Por favor, pega el texto del informe meteorológico."); return;}
   const lineas=texto.split("\n");
-  const primerasDos=lineas.slice(0,2).map(l=>`<div class="encabezado-principal">${l}</div>`).join("");
-  const libres=lineas.slice(2,5).map(l=>`<div class="parrafo-libre">${l}</div>`).join("");
+const primerasDos = lineas.slice(0, 2)
+  .map(l => `<div class="encabezado-principal">${l}</div>`)
+  .join("");
+
+// 🔹 Agrega el espacio AUTOMÁTICO entre línea 2 y 3
+const espacioEntre2y3 = `<div style="height:18px;"></div>`;
+
+const libres = lineas.slice(2, 5)
+  .map(l => `<div class="parrafo-libre">${l}</div>`)
+  .join("");
+
   const resto=lineas.slice(5).join("\n");
   const textoProcesado=formatearTexto(resto,listaMayus);
   const htmlFormateado=aplicarFormatoHTML(textoProcesado);
-  document.getElementById("vistaPrevia").innerHTML=`${primerasDos}${libres}<br>${htmlFormateado}`;
+document.getElementById("vistaPrevia").innerHTML =
+  `${primerasDos}${espacioEntre2y3}${libres}<br>${htmlFormateado}`;
+
 }
 
 async function generarPDF(){
@@ -367,3 +380,4 @@ function reiniciar(){
 </script>
 </body>
 </html>
+
