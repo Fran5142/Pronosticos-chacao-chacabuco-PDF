@@ -288,13 +288,14 @@ function corregirDireccionesViento(texto){
     texto=texto.replace(new RegExp('\\b'+clave+'\\b','gi'),valor);
   }
 
-// 🔹 UV EN MAYÚSCULA, NEGRITA Y CON ESPACIO HACIA ABAJO
+// 🔹 UV EN MAYÚSCULAS, NEGRITA Y CON ESPACIO HACIA ABAJO
 texto = texto.replace(
-  /indice\s+de\s+radiacion\s+ultravioleta:\s*([0-9+]+\s*[-–]?\s*[0-9+]*)\s*([a-záéíóúñ]+)\s*\(fuente\s+dmc\)/gi,
+  /indice\s+de\s+radiacion\s+ultravioleta:\s*([0-9+]+\s*[–-]?\s*[0-9+]*?)\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+)?)\s*\(fuente\s+dmc\)\.?/gi,
   (match, rango, categoria) => {
     return `<br><span class="negrita">ÍNDICE DE RADIACIÓN ULTRAVIOLETA: ${rango.toUpperCase()} ${categoria.toUpperCase()} (FUENTE DMC)</span>`;
   }
 );
+
 
 
 
