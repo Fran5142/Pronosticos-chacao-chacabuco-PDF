@@ -18,7 +18,17 @@
     padding: 20px;
   }
 
-  h1, h2 {
+  h1 {
+    text-align: center;
+    color: #fff;
+    font-size: 26px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  }
+
+  h2 {
     text-align: center;
     color: #fff;
     font-size: 26px;
@@ -45,7 +55,12 @@
   }
 
   .config.oculta { display: none; }
-  .config { width: 80%; margin: 0 auto 10px auto; font-size: 14px; color: #fff; }
+  .config {
+    width: 80%;
+    margin: 0 auto 10px auto;
+    font-size: 14px;
+    color: #fff;
+  }
 
   input {
     width: 100%;
@@ -70,6 +85,7 @@
   }
 
   button:hover { transform: translateY(-2px); }
+
   .btn-vista { background: #00b4d8; color: #001f3f; }
   .btn-vista:hover { background: #90e0ef; }
   .btn-pdf { background: #e63946; color: #fff; }
@@ -134,7 +150,7 @@
     text-transform: none;
     display: block;
     width: 95%;
-    border-radius: 6px;
+    border-radius: 0px;
     box-sizing: border-box;
   }
 
@@ -170,6 +186,30 @@
     color: #000;
     text-decoration: underline;
   }
+
+ .bloque-editable-especial {
+  font-family: Arial, sans-serif;
+  font-size: 12pt;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 10px;
+  margin-bottom: 0px;
+  margin-left: -8px;
+  padding: 6px;
+  background: #fff;
+  color: #000;
+  border: 1px dashed #999;
+  border-radius: 6px;
+  display: block;
+  width: 95%;
+  height: 25px;   /* o 100px, 120px, etc */
+  box-sizing: border-box;
+}
+
+.generando-pdf .bloque-editable-especial {
+  border: none !important;
+  background: none !important;
+}
 
   footer {
     text-align: center;
@@ -210,7 +250,6 @@ span.negrita[data-met="true"] {
   background: #fff3d6;
   box-shadow: 0 6px 12px rgba(0,0,0,0.12); 
 }
-
 </style>
 </head>
 
@@ -221,7 +260,7 @@ span.negrita[data-met="true"] {
 <textarea id="textoInforme" placeholder="Pega aquí tu informe meteorológico en mayúsculas..."></textarea>
 
 <div class="config oculta">
-  <label>Palabras que deben mantenerse SIEMPRE en mayúsculas (separadas por comas):</label>
+  <label>Palabras en mayúsculas:</label>
   <input type="text" id="palabrasMayus" value="MET008FF, MET106MD, N, S, E, W, NE, SE, NW, SW, N/NW, N/NE, S/SE, S/SW, E/SE, W/SW, PM, AM">
 </div>
 
@@ -245,7 +284,22 @@ span.negrita[data-met="true"] {
 <script>
 function corregirDireccionesViento(texto){
   const direcciones={'SURWESTE':'Surweste','SURESTE':'Sureste','NORWESTE':'Norweste','NORESTE':'Noreste','NORTE':'Norte','SUR':'Sur','WESTE':'Weste','ESTE':'Este'};
-  for(const [clave,valor] of Object.entries(direcciones)){texto=texto.replace(new RegExp('\\b'+clave+'\\b','gi'),valor);}
+  for(const [clave,valor] of Object.entries(direcciones)){
+    texto=texto.replace(new RegExp('\\b'+clave+'\\b','gi'),valor);
+  }
+
+// 🔹 UV EN MAYÚSCULA, NEGRITA Y CON ESPACIO HACIA ABAJO
+texto = texto.replace(
+  /indice\s+de\s+radiacion\s+ultravioleta:\s*([0-9+]+\s*[-–]?\s*[0-9+]*)\s*([a-záéíóúñ]+)\s*\(fuente\s+dmc\)/gi,
+  (match, rango, categoria) => {
+    return `<br><span class="negrita">ÍNDICE DE RADIACIÓN ULTRAVIOLETA: ${rango.toUpperCase()} ${categoria.toUpperCase()} (FUENTE DMC)</span>`;
+  }
+);
+
+
+
+
+
   return texto;
 }
 
@@ -266,35 +320,24 @@ function capitalizarTexto(str){
   return str.toLowerCase().replace(/(^|[\s])([a-záéíóúñ])/g,(m,sep,letra)=>sep+letra.toUpperCase());
 }
 
-function formatearTexto(texto, listaMayus){
-  texto = texto.replace(/.*TEMPERATURA\s+MINIMA\s+PROBABLE.*(\n|$)/gi, "");
-  texto = texto.replace(/.*TEMPERATURA\s+MAXIMA\s+PROBABLE.*(\n|$)/gi, "");
-
-  const lineasEspeciales = texto.match(/.*(INDICE\s+DE\s+RADIACION\s+ULTRAVIOLETA|MET\d+).*/gim) || [];
-  texto = texto.toLowerCase();
-  texto = texto.replace(/(^|[.!?\n]\s*)([a-záéíóúñ])/g, (m, sep, letra) => sep + letra.toUpperCase());
-  
-  lineasEspeciales.forEach(linea => {
-    const original = linea.toUpperCase();
-    texto = texto.replace(
-      new RegExp(linea.trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
-      original
-    );
+function formatearTexto(texto,listaMayus){
+  const lineasEspeciales=texto.match(/.*(TEMPERATURA\s+MINIMA\s+PROBABLE|TEMPERATURA\s+MAXIMA\s+PROBABLE|INDICE\s+DE\s+RADIACION\s+ULTRAVIOLETA|MET\d+).*/gim)||[];
+  texto=texto.toLowerCase();
+  texto=texto.replace(/(^|[.!?\n]\s*)([a-záéíóúñ])/g,(m,sep,letra)=>sep+letra.toUpperCase());
+  lineasEspeciales.forEach(linea=>{
+    const original=linea.toUpperCase();
+    texto=texto.replace(new RegExp(linea.trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"g"),original);
   });
+  texto=corregirDireccionesViento(texto);
+  texto=reemplazarAbreviaturas(texto);
 
-  texto = corregirDireccionesViento(texto);
-  texto = reemplazarAbreviaturas(texto);
-
-  listaMayus.forEach(palabra => {
-    const palabraTrim = palabra.trim();
-    const regex = new RegExp("\\b" + palabraTrim + "\\b", "gi");
+  listaMayus.forEach(palabra=>{
+    const palabraTrim=palabra.trim();
+    const regex=new RegExp("\\b"+palabraTrim+"\\b","gi");
     if (palabraTrim.toUpperCase().startsWith("MET")) {
-      texto = texto.replace(
-        regex,
-        `\n\n<div style="margin-top:25px; margin-bottom:25px; text-align:left; font-weight:bold;">${palabraTrim.toUpperCase()}</div>\n\n`
-      );
+      texto = texto.replace(regex, `<span class="negrita" data-met="true">${palabraTrim.toUpperCase()}</span>`);
     } else {
-      texto = texto.replace(regex, palabraTrim.toUpperCase());
+      texto=texto.replace(regex,palabraTrim.toUpperCase());
     }
   });
 
@@ -302,10 +345,14 @@ function formatearTexto(texto, listaMayus){
 texto = texto.replace(/\(mal\s+tiempo\)/gi, '<span class="negrita">(MAL TIEMPO)</span>');
 texto = texto.replace(/\(temporal\)/gi, '<span class="negrita">(TEMPORAL)</span>');
 
-// 🔹 Poner EMITIDO: en negrita automáticamente
-texto = texto.replace(/\bEMITIDO:\s*(.*)/gi, (_, resto) => {
-  return `<span class="negrita">EMITIDO:</span> ${resto.toUpperCase()}`;
+// 🔹 Poner EMITIDO: o EMITIDO en negrita automáticamente
+// 🔹 Solo "EMITIDO:" en negrita — el resto en mayúsculas sin negrita
+texto = texto.replace(/(emitido:)([^\n]*)/gi, (match, p1, p2) => {
+    const titulo = p1.toUpperCase();      // EMITIDO:
+    const resto = p2.toUpperCase();       // Todo lo demás
+    return `<span class="negrita">${titulo}</span>${resto}`;
 });
+
 
 return texto;
 
@@ -313,21 +360,19 @@ return texto;
 
 function aplicarFormatoHTML(texto){
   let html=texto;
-
   html=html.replace(/\b(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado|Domingo)\s+\d{1,2}(\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre))?\.?/gi,
     match=>{const formateado=capitalizarTexto(match.replace(/\./g,"").trim());return `<div class="dia-semana"><b><u>${formateado}</u></b></div>`;});
 
-  html=html.replace(/(INDICE\s+DE\s+RADIACION\s+ULTRAVIOLETA\s*:[^\n]*)/gi,
-    (match)=>`<div class="bloque-temp">${match.trim()}<div class="bloque-editable-bajo" contenteditable="true">(pega aquí tu texto en negrita)</div></div>`);
+  html=html.replace(/\bPRONOSTICO VALIDO DESDE[^\n]*\n?/gi,
+    '<div class="bloque-editable-especial" contenteditable="true">(Escribe aquí tu texto especial en negrita)</div>');
 
-  html=html.replace(/\bSITUACION SINOPTICA:?[\s\n]*/gi,'<div class="bloque-seccion"><span class="titulo-seccion">Situación Sinóptica:</span>');
-  html=html.replace(/\bPRONOSTICO VALIDO DESDE:?[\s\n]*/gi,'</div><div class="bloque-seccion"><span class="titulo-seccion">Pronóstico válido desde:</span><div class="bloque-editable-bajo" contenteditable="true">(pega aquí tu texto en negrita)</div>');
-  html=html.replace(/\bPRONOSTICO:?[\s\n]*/gi,'</div><div class="bloque-seccion"><span class="titulo-seccion">Pronóstico:</span>');
+  html=html.replace(/\bSITUACION SINOPTICA:?[\s\n]*/gi,
+    '<div class="bloque-seccion"><span class="titulo-seccion">Situación Sinóptica:</span>');
+  html=html.replace(/\bPRONOSTICO:?[\s\n]*/gi,
+    '</div><div class="bloque-seccion"><span class="titulo-seccion">Pronóstico:</span>');
   html+='</div>';
-
-  html = html.replace(/(<span class="negrita">MET\d+<\/span>)/g, '<br><br>$1<br><br>');
-
-  html=html.replace(/\n{2,}/g,'\n').replace(/\n/g,'<br>');
+  html=html.replace(/\n{2,}/g,'\n');
+  html=html.replace(/\n/g,'<br>');
   return html;
 }
 
@@ -336,13 +381,15 @@ function generarVista(){
   const listaMayus=document.getElementById("palabrasMayus").value.split(",");
   if(!texto){alert("Por favor, pega el texto del informe meteorológico."); return;}
   const lineas=texto.split("\n");
-const primerasDos = lineas.slice(0, 2)
+ // 🔹 LÍNEAS 1 y 2
+let primerasDos = lineas.slice(0, 2)
   .map(l => `<div class="encabezado-principal">${l}</div>`)
   .join("");
 
-// 🔹 Agrega el espacio AUTOMÁTICO entre línea 2 y 3
-const espacioEntre2y3 = `<div style="height:18px;"></div>`;
+// 🔹 Agregar espacio automático entre la línea 2 y 3
+primerasDos += `<div style="height:18px;"></div>`;   // Puedes ajustar 18px si quieres más/menos espacio
 
+// 🔹 LÍNEAS 3, 4 y 5
 const libres = lineas.slice(2, 5)
   .map(l => `<div class="parrafo-libre">${l}</div>`)
   .join("");
@@ -350,16 +397,13 @@ const libres = lineas.slice(2, 5)
   const resto=lineas.slice(5).join("\n");
   const textoProcesado=formatearTexto(resto,listaMayus);
   const htmlFormateado=aplicarFormatoHTML(textoProcesado);
-document.getElementById("vistaPrevia").innerHTML =
-  `${primerasDos}${espacioEntre2y3}${libres}<br>${htmlFormateado}`;
-
+  document.getElementById("vistaPrevia").innerHTML=`${primerasDos}${libres}<br>${htmlFormateado}`;
 }
 
-async function generarPDF(){
+async function generarPDF() {
   const { jsPDF } = window.jspdf;
   const vista = document.getElementById("vistaPrevia");
-  vista.style.textAlign = "justify";
-
+  vista.classList.add("generando-pdf");
   const canvas = await html2canvas(vista, { scale: 2, backgroundColor: "#ffffff" });
   const imgData = canvas.toDataURL("image/png");
   const pdf = new jsPDF("p", "mm", "letter");
@@ -369,6 +413,7 @@ async function generarPDF(){
   const nombreArchivo = document.getElementById("nombrePDF").value.trim() || "Informe_Meteorologico";
   pdf.addImage(imgData, "PNG", (pageWidth - imgWidth) / 2, 10, imgWidth, imgHeight);
   pdf.save(nombreArchivo + ".pdf");
+  vista.classList.remove("generando-pdf");
 }
 
 function reiniciar(){
@@ -380,4 +425,3 @@ function reiniciar(){
 </script>
 </body>
 </html>
-
