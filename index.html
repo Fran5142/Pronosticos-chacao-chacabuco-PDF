@@ -389,7 +389,7 @@ async function generarPDF() {
   const vista = document.getElementById("vistaPrevia");
   vista.classList.add("generando-pdf");
 
-  const canvas = await html2canvas(vista, { scale: 1.2, backgroundColor: "#ffffff" });
+  const canvas = await html2canvas(vista, { scale: 2, backgroundColor: "#ffffff" });
   const imgData = canvas.toDataURL("image/jpeg", 0.7); // JPEG calidad 70%
 
   const pdf = new jsPDF("p", "mm", "letter");
@@ -413,3 +413,4 @@ function reiniciar(){
 </script>
 </body>
 </html>
+
