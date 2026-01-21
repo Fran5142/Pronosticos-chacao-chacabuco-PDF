@@ -328,6 +328,18 @@ function corregirTildesContexto(texto) {
     "anticiclónico"
   );
 
+  // 3️⃣ CIRCULACIÓN al inicio de frase
+  texto = texto.replace(
+    /(^|[.!?\n]\s*)(CIRCULACION)\b/gi,
+    (m, inicio) => `${inicio}Circulación`
+  );
+
+  // 4️⃣ circulación dentro de la frase
+  texto = texto.replace(
+    /\bCIRCULACION\b/gi,
+    "circulación"
+  );
+
   return texto;
 }
 
@@ -346,7 +358,7 @@ function formatearTexto(texto,listaMayus){
   });
   texto=corregirDireccionesViento(texto);
   texto=reemplazarAbreviaturas(texto);
-  texto = corregirTildesContexto(texto); // 👈 AQUÍ
+
 
   listaMayus.forEach(palabra=>{
     const palabraTrim=palabra.trim();
@@ -366,6 +378,19 @@ texto = texto.replace(/(emitido:)([^\n]*)/gi, (match, p1, p2) => {
     const resto = p2.toUpperCase();       
     return `<span class="negrita">${titulo}</span>${resto}`;
 });
+
+listaMayus.forEach(palabra=>{
+  const palabraTrim=palabra.trim();
+  const regex=new RegExp("\\b"+palabraTrim+"\\b","gi");
+  if (palabraTrim.toUpperCase().startsWith("MET")) {
+    texto = texto.replace(regex, `<span class="negrita" data-met="true">${palabraTrim.toUpperCase()}</span>`);
+  } else {
+    texto = texto.replace(regex,palabraTrim.toUpperCase());
+  }
+});
+
+// 👇 SIEMPRE AL FINAL
+texto = corregirTildesContexto(texto);
 
 return texto;
 }
@@ -436,8 +461,4 @@ function reiniciar(){
 </script>
 </body>
 </html>
-
-
-
-
 
